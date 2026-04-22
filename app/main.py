@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 import os
 import uuid
+import pandas as pd
 from typing import Optional
 
 from app.database import get_db, init_db
@@ -194,6 +195,120 @@ def get_moon_phase_statistics(db: Session = Depends(get_db)):
         {"hold_fazis": s.hold_fazis, "darab": s.darab, "atlag_suly": float(s.atlag_suly) if s.atlag_suly else 0}
         for s in stat
     ]
+
+@app.post("/api/import")
+async def import_catches(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    """Fogások importálása CSV vagy Excel fájlból"""
+    try:
+        # Fájl kiterjesztés ellenőrzése
+        file_extension = file.filename.split('.')[-1].lower()
+        
+        if file_extension not in ['csv', 'xlsx', 'xls']:
+            raise HTTPException(status_code=400, detail="Csak CSV és Excel fájlok támogatottak")
+        
+        # Fájl beolvasása
+        if file_extension == 'csv':
+            df = pd.read_csv(file.file)
+        else:
+            df = pd.read_excel(file.file)
+        
+        # Oszlopok normalizálása
+        df.columns = df.columns.str.lower().str.strip()
+        
+        # Oszlopok mapping
+        column_mapping = {
+            'dátum': 'datum',
+            'datum': 'datum',
+            'date': 'datum',
+            'helyszín': 'helyszin',
+            'helyszin': 'helyszin',
+            'location': 'helyszin',
+            'halfaj': 'halfaj',
+            'halfaj': 'halfaj',
+            'fish': 'halfaj',
+            'súly': 'suly',
+            'suly': 'suly',
+            'weight': 'suly',
+            'hossz': 'hossz',
+            'hossz': 'hossz',
+            'length': 'hossz',
+            'csali': 'csali',
+            'csali': 'csali',
+            'bait': 'csali',
+            'etetőanyag': 'etetoanyag',
+            'etetoanyag': 'etetoanyag',
+            'feed': 'etetoanyag',
+            'megjegyzés': 'megjegyzes',
+            'megjegyzes': 'megjegyzes',
+            'note': 'megjegyzes'
+        }
+        
+        df = df.rename(columns=column_mapping)
+        
+        # Halfajok lekérése
+        halfajok = db.query(Halfaj).all()
+        halfaj_map = {h.nev.lower(): h.id for h in halfajok}
+        
+        import_count = 0
+        errors = []
+        
+        for _, row in df.iterrows():
+            try:
+                # Dátum konvertálása
+                datum_str = str(row.get('datum', ''))
+                if pd.isna(datum_str) or datum_str == 'nan':
+                    continue
+                
+                try:
+                    datum = pd.to_datetime(datum_str)
+                except:
+                    errors.append(f"Érvénytelen dátum: {datum_str}")
+                    continue
+                
+                # Halfaj keresése
+                halfaj_nev = str(row.get('halfaj', '')).lower().strip()
+                if not halfaj_nev or halfaj_nev == 'nan':
+                    halfaj_id = None
+                else:
+                    halfaj_id = halfaj_map.get(halfaj_nev)
+                    if not halfaj_id:
+                        # Új halfaj létrehozása
+                        new_halfaj = Halfaj(nev=row.get('halfaj', halfaj_nev).capitalize(), aktiv=True)
+                        db.add(new_halfaj)
+                        db.commit()
+                        db.refresh(new_halfaj)
+                        halfaj_id = new_halfaj.id
+                        halfaj_map[halfaj_nev] = halfaj_id
+                
+                # Napló létrehozása
+                naplo = HorgaszatiNaplo(
+                    datum=datum,
+                    helyszin=str(row.get('helyszin', '')).strip() or 'Ismeretlen',
+                    halfaj_id=halfaj_id,
+                    suly=float(row.get('suly', 0)) if pd.notna(row.get('suly')) else None,
+                    hossz=float(row.get('hossz', 0)) if pd.notna(row.get('hossz')) else None,
+                    csali=str(row.get('csali', '')).strip() or None,
+                    etetoanyag=str(row.get('etetoanyag', '')).strip() or None,
+                    megjegyzes=str(row.get('megjegyzes', '')).strip() or None
+                )
+                
+                db.add(naplo)
+                import_count += 1
+                
+            except Exception as e:
+                errors.append(f"Sor importálási hiba: {str(e)}")
+        
+        db.commit()
+        
+        return {
+            "success": True,
+            "imported": import_count,
+            "errors": errors[:10]  # Max 10 hiba visszajelzés
+        }
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Import hiba: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

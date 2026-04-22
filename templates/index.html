@@ -318,6 +318,15 @@
                 <i class="fas fa-book me-2"></i>Horgászati Napló
             </div>
             <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <button class="btn btn-success" onclick="document.getElementById('importFile').click()">
+                            <i class="fas fa-file-import me-2"></i>Importálás (CSV/Excel)
+                        </button>
+                        <input type="file" id="importFile" accept=".csv,.xlsx,.xls" style="display: none" onchange="importCatches()">
+                        <span id="importStatus" class="ms-3"></span>
+                    </div>
+                </div>
                 <form id="naploForm">
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -849,6 +858,54 @@
                 pvaRow.style.display = 'none';
                 document.getElementById('pva_tartalom').value = '';
             }
+        }
+
+        // Importálás
+        async function importCatches() {
+            const fileInput = document.getElementById('importFile');
+            const statusSpan = document.getElementById('importStatus');
+            
+            if (fileInput.files.length === 0) {
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            statusSpan.textContent = 'Importálás folyamatban...';
+            statusSpan.className = 'ms-3 text-info';
+            
+            try {
+                const response = await fetch('/api/import', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusSpan.textContent = `Sikeres import: ${result.imported} fogás`;
+                    statusSpan.className = 'ms-3 text-success';
+                    
+                    if (result.errors.length > 0) {
+                        statusSpan.textContent += ` (${result.errors.length} hiba)`;
+                    }
+                    
+                    // Naplók újratöltése
+                    loadNaplok();
+                    loadAnalysis();
+                } else {
+                    statusSpan.textContent = 'Import hiba: ' + result.detail;
+                    statusSpan.className = 'ms-3 text-danger';
+                }
+            } catch (error) {
+                statusSpan.textContent = 'Import hiba: ' + error.message;
+                statusSpan.className = 'ms-3 text-danger';
+            }
+            
+            // Fájl input törlése
+            fileInput.value = '';
         }
 
         // Javaslatok lekérése
