@@ -134,6 +134,67 @@ def reverse_geocode(latitude: float, longitude: float):
     """Helyszín lekérése GPS koordináták alapján"""
     return location_service.reverse_geocode(latitude, longitude)
 
+@app.get("/api/statistics/monthly")
+def get_monthly_statistics(db: Session = Depends(get_db)):
+    """Havi statisztikák"""
+    from sqlalchemy import func
+    naplok = db.query(
+        func.strftime('%Y-%m', HorgaszatiNaplo.datum).label('honap'),
+        func.count(HorgaszatiNaplo.id).label('darab'),
+        func.sum(HorgaszatiNaplo.suly).label('ossz_suly')
+    ).group_by(func.strftime('%Y-%m', HorgaszatiNaplo.datum)).order_by(func.strftime('%Y-%m', HorgaszatiNaplo.datum)).all()
+    
+    return [
+        {"honap": n.honap, "darab": n.darab, "ossz_suly": float(n.ossz_suly) if n.ossz_suly else 0}
+        for n in naplok
+    ]
+
+@app.get("/api/statistics/fish-species")
+def get_fish_species_statistics(db: Session = Depends(get_db)):
+    """Halfaj szerinti statisztikák"""
+    from sqlalchemy import func
+    stat = db.query(
+        Halfaj.nev,
+        func.count(HorgaszatiNaplo.id).label('darab'),
+        func.avg(HorgaszatiNaplo.suly).label('atlag_suly'),
+        func.max(HorgaszatiNaplo.suly).label('max_suly')
+    ).join(Halfaj, HorgaszatiNaplo.halfaj_id == Halfaj.id).group_by(Halfaj.nev).all()
+    
+    return [
+        {"halfaj": s.nev, "darab": s.darab, "atlag_suly": float(s.atlag_suly) if s.atlag_suly else 0, "max_suly": float(s.max_suly) if s.max_suly else 0}
+        for s in stat
+    ]
+
+@app.get("/api/statistics/locations")
+def get_location_statistics(db: Session = Depends(get_db)):
+    """Helyszín szerinti statisztikák"""
+    from sqlalchemy import func
+    stat = db.query(
+        HorgaszatiNaplo.helyszin,
+        func.count(HorgaszatiNaplo.id).label('darab'),
+        func.sum(HorgaszatiNaplo.suly).label('ossz_suly')
+    ).group_by(HorgaszatiNaplo.helyszin).order_by(func.count(HorgaszatiNaplo.id).desc()).all()
+    
+    return [
+        {"helyszin": s.helyszin, "darab": s.darab, "ossz_suly": float(s.ossz_suly) if s.ossz_suly else 0}
+        for s in stat
+    ]
+
+@app.get("/api/statistics/moon-phase")
+def get_moon_phase_statistics(db: Session = Depends(get_db)):
+    """Holdfázis szerinti statisztikák"""
+    from sqlalchemy import func
+    stat = db.query(
+        HorgaszatiNaplo.hold_fazis,
+        func.count(HorgaszatiNaplo.id).label('darab'),
+        func.avg(HorgaszatiNaplo.suly).label('atlag_suly')
+    ).group_by(HorgaszatiNaplo.hold_fazis).all()
+    
+    return [
+        {"hold_fazis": s.hold_fazis, "darab": s.darab, "atlag_suly": float(s.atlag_suly) if s.atlag_suly else 0}
+        for s in stat
+    ]
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

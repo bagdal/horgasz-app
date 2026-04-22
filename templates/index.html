@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -442,22 +443,22 @@
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <h5>Halfaj statisztika</h5>
-                        <div id="speciesStats"></div>
+                        <h5>Havi statisztikák</h5>
+                        <canvas id="monthlyChart"></canvas>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <h5>Időjárás statisztika</h5>
-                        <div id="weatherStats"></div>
+                        <h5>Halfaj statisztika</h5>
+                        <canvas id="fishSpeciesChart"></canvas>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <h5>Csali statisztika</h5>
-                        <div id="baitStats"></div>
+                        <h5>Helyszín statisztika</h5>
+                        <canvas id="locationChart"></canvas>
                     </div>
                     <div class="col-md-6 mb-3">
                         <h5>Hold fázis statisztika</h5>
-                        <div id="moonStats"></div>
+                        <canvas id="moonPhaseChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -691,61 +692,150 @@
                 document.getElementById('totalLocations').textContent = Object.keys(analysis.helyszin_statisztika || {}).length;
                 document.getElementById('totalSpecies').textContent = (analysis.halfaj_statisztika || []).length;
                 
-                // Halfaj statisztika
-                const speciesStats = document.getElementById('speciesStats');
-                speciesStats.innerHTML = '';
-                if (analysis.halfaj_statisztika) {
-                    analysis.halfaj_statisztika.forEach(stat => {
-                        speciesStats.innerHTML += `
-                            <div class="mb-2">
-                                <strong>${stat.halfaj}:</strong> ${stat.fogas_szam} db, 
-                                átlag: ${stat.atlagos_suly.toFixed(2)} kg
-                            </div>
-                        `;
-                    });
-                }
-                
-                // Időjárás statisztika
-                const weatherStats = document.getElementById('weatherStats');
-                weatherStats.innerHTML = '';
-                if (analysis.idobar_statisztika) {
-                    Object.entries(analysis.idobar_statisztika).forEach(([key, value]) => {
-                        weatherStats.innerHTML += `
-                            <div class="mb-2">
-                                <strong>${key}:</strong> ${value}
-                            </div>
-                        `;
-                    });
-                }
-                
-                // Csali statisztika
-                const baitStats = document.getElementById('baitStats');
-                baitStats.innerHTML = '';
-                if (analysis.csali_statisztika && analysis.csali_statisztika.csali) {
-                    Object.entries(analysis.csali_statisztika.csali).forEach(([key, value]) => {
-                        baitStats.innerHTML += `
-                            <div class="mb-2">
-                                <strong>${key}:</strong> ${value}
-                            </div>
-                        `;
-                    });
-                }
-                
-                // Hold fázis statisztika
-                const moonStats = document.getElementById('moonStats');
-                moonStats.innerHTML = '';
-                if (analysis.hold_fazis_statisztika) {
-                    Object.entries(analysis.hold_fazis_statisztika).forEach(([key, value]) => {
-                        moonStats.innerHTML += `
-                            <div class="mb-2">
-                                <strong>${key}:</strong> ${value}
-                            </div>
-                        `;
-                    });
-                }
+                // Grafikonok betöltése
+                await loadCharts();
             } catch (error) {
                 console.error('Hiba az elemzés betöltésekor:', error);
             }
+        }
+
+        // Grafikonok betöltése
+        async function loadCharts() {
+            try {
+                // Havi statisztikák
+                const monthlyResponse = await fetch('/api/statistics/monthly');
+                const monthlyData = await monthlyResponse.json();
+                createMonthlyChart(monthlyData);
+                
+                // Halfaj statisztika
+                const fishResponse = await fetch('/api/statistics/fish-species');
+                const fishData = await fishResponse.json();
+                createFishSpeciesChart(fishData);
+                
+                // Helyszín statisztika
+                const locationResponse = await fetch('/api/statistics/locations');
+                const locationData = await locationResponse.json();
+                createLocationChart(locationData);
+                
+                // Hold fázis statisztika
+                const moonResponse = await fetch('/api/statistics/moon-phase');
+                const moonData = await moonResponse.json();
+                createMoonPhaseChart(moonData);
+            } catch (error) {
+                console.error('Hiba a grafikonok betöltésekor:', error);
+            }
+        }
+
+        // Havi statisztikák grafikon
+        function createMonthlyChart(data) {
+            const ctx = document.getElementById('monthlyChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.honap),
+                    datasets: [{
+                        label: 'Fogások száma',
+                        data: data.map(d => d.darab),
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Összsúly (kg)',
+                        data: data.map(d => d.ossz_suly),
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    }
+                }
+            });
+        }
+
+        // Halfaj statisztika grafikon
+        function createFishSpeciesChart(data) {
+            const ctx = document.getElementById('fishSpeciesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.halfaj),
+                    datasets: [{
+                        label: 'Fogások száma',
+                        data: data.map(d => d.darab),
+                        backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                        borderColor: '#3498db',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Helyszín statisztika grafikon
+        function createLocationChart(data) {
+            const ctx = document.getElementById('locationChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(d => d.helyszin),
+                    datasets: [{
+                        data: data.map(d => d.darab),
+                        backgroundColor: [
+                            '#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6',
+                            '#1abc9c', '#34495e', '#e67e22', '#16a085', '#8e44ad'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Hold fázis statisztika grafikon
+        function createMoonPhaseChart(data) {
+            const ctx = document.getElementById('moonPhaseChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.hold_fazis || 'Ismeretlen'),
+                    datasets: [{
+                        label: 'Átlagos súly (kg)',
+                        data: data.map(d => d.atlag_suly),
+                        backgroundColor: 'rgba(155, 89, 182, 0.7)',
+                        borderColor: '#9b59b6',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
         }
 
         // PVA mező dinamikus megjelenítése
