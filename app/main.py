@@ -251,6 +251,11 @@ async def import_catches(file: UploadFile = File(...), db: Session = Depends(get
         
         df = df.rename(columns=column_mapping)
         
+        # Sorok törlése érvénytelen dátummal
+        if 'datum' in df.columns:
+            df['datum'] = pd.to_datetime(df['datum'], errors='coerce')
+            df = df.dropna(subset=['datum'])
+        
         # Halfajok lekérése
         halfajok = db.query(Halfaj).all()
         halfaj_map = {h.nev.lower(): h.id for h in halfajok}
