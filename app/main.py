@@ -255,12 +255,17 @@ async def import_catches(file: UploadFile = File(...), db: Session = Depends(get
         for _, row in df.iterrows():
             try:
                 # Dátum konvertálása
-                datum_str = str(row.get('datum', ''))
-                if pd.isna(datum_str) or datum_str == 'nan':
+                datum_str = row.get('datum', '')
+                
+                # Üres vagy NaN dátum szűrése
+                if pd.isna(datum_str) or str(datum_str).strip() == '' or str(datum_str).lower() == 'nan':
                     continue
                 
                 try:
                     datum = pd.to_datetime(datum_str)
+                    # NaT ellenőrzés
+                    if pd.isna(datum):
+                        continue
                 except:
                     errors.append(f"Érvénytelen dátum: {datum_str}")
                     continue
