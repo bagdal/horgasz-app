@@ -285,11 +285,11 @@ async def import_catches(file: UploadFile = File(...), db: Session = Depends(get
                     datum=datum,
                     helyszin=str(row.get('helyszin', '')).strip() or 'Ismeretlen',
                     halfaj_id=halfaj_id,
-                    suly=float(row.get('suly', 0)) if pd.notna(row.get('suly')) else None,
-                    hossz=float(row.get('hossz', 0)) if pd.notna(row.get('hossz')) else None,
-                    csali=str(row.get('csali', '')).strip() or None,
-                    etetoanyag=str(row.get('etetoanyag', '')).strip() or None,
-                    megjegyzes=str(row.get('megjegyzes', '')).strip() or None
+                    suly=float(row.get('suly')) if pd.notna(row.get('suly')) and row.get('suly') != 0 else None,
+                    hossz=float(row.get('hossz')) if pd.notna(row.get('hossz')) and row.get('hossz') != 0 else None,
+                    csali=str(row.get('csali', '')).strip() if pd.notna(row.get('csali')) and str(row.get('csali', '')).strip() != 'nan' else None,
+                    etetoanyag=str(row.get('etetoanyag', '')).strip() if pd.notna(row.get('etetoanyag')) and str(row.get('etetoanyag', '')).strip() != 'nan' else None,
+                    megjegyzes=str(row.get('megjegyzes', '')).strip() if pd.notna(row.get('megjegyzes')) and str(row.get('megjegyzes', '')).strip() != 'nan' else None
                 )
                 
                 db.add(naplo)
