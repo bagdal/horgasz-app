@@ -212,6 +212,9 @@ async def import_catches(file: UploadFile = File(...), db: Session = Depends(get
         else:
             df = pd.read_excel(file.file)
         
+        # Üres sorok törlése (ahol minden érték NaN)
+        df = df.dropna(how='all')
+        
         # Oszlopok normalizálása
         df.columns = df.columns.str.lower().str.strip()
         
