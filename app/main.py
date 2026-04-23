@@ -215,6 +215,9 @@ async def import_catches(file: UploadFile = File(...), db: Session = Depends(get
         # Üres sorok törlése (ahol minden érték NaN)
         df = df.dropna(how='all')
         
+        # NaN értékek None-ra cserélése az egész DataFrame-ben
+        df = df.where(pd.notnull(df), None)
+        
         # Oszlopok normalizálása
         df.columns = df.columns.str.lower().str.strip()
         
