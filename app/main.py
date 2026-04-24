@@ -344,6 +344,37 @@ async def import_catches(file: UploadFile = File(...), db: Session = Depends(get
         db.rollback()
         raise HTTPException(status_code=400, detail=f"Import hiba: {str(e)}")
 
+@app.get("/api/photos")
+def get_photos(
+    halfaj_id: Optional[int] = None,
+    helyszin: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    query = db.query(HorgaszatiNaplo).filter(HorgaszatiNaplo.fenym_kep_utvonala != None)
+    
+    if halfaj_id:
+        query = query.filter(HorgaszatiNaplo.halfaj_id == halfaj_id)
+    
+    if helyszin:
+        query = query.filter(HorgaszatiNaplo.helyszin.ilike(f"%{helyszin}%"))
+    
+    photos = query.order_by(HorgaszatiNaplo.datum.desc()).all()
+    
+    result = []
+    for photo in photos:
+        result.append({
+            "id": photo.id,
+            "datum": photo.datum.isoformat() if photo.datum else None,
+            "helyszin": photo.helyszin,
+            "halfaj_nev": photo.halfaj.nev if photo.halfaj else None,
+            "halfaj_id": photo.halfaj_id,
+            "suly": photo.suly,
+            "hossz": photo.hossz,
+            "fenym_kep_utvonala": photo.fenym_kep_utvonala
+        })
+    
+    return result
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -171,6 +171,9 @@
                     <button onclick="showSection('naplo')" class="nav-link px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 active" id="naploLink">
                         <i class="fas fa-book mr-2"></i>Napló
                     </button>
+                    <button onclick="showSection('galeria')" class="nav-link px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10" id="galeriaLink">
+                        <i class="fas fa-images mr-2"></i>Galéria
+                    </button>
                     <button onclick="showSection('terkep')" class="nav-link px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10" id="terkepLink">
                         <i class="fas fa-map-marker-alt mr-2"></i>Térkép
                     </button>
@@ -298,6 +301,34 @@
             </div>
         </div>
         
+        <!-- Galéria szekció -->
+        <div id="galeriaSection" class="fade-in hidden">
+            <div class="glass-card rounded-2xl shadow-card p-6 mb-6 card-hover">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-images mr-3 text-blue-500"></i>Fotógaléria
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Halfaj</label>
+                        <select id="galeriaHalfaj" class="input-field w-full px-4 py-2 rounded-lg" onchange="loadGallery()">
+                            <option value="">Összes</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Helyszín</label>
+                        <input type="text" id="galeriaHelyszin" class="input-field w-full px-4 py-2 rounded-lg" placeholder="Helyszín szűrés" oninput="loadGallery()">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="loadGallery()" class="btn-gradient text-white px-6 py-2 rounded-lg font-medium w-full">
+                            <i class="fas fa-filter mr-2"></i>Szűrés
+                        </button>
+                    </div>
+                </div>
+                <div id="galleryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                </div>
+            </div>
+        </div>
+        
         <!-- Térkép szekció -->
         <div id="terkepSection" class="fade-in hidden">
             <div class="glass-card rounded-2xl shadow-card p-6 card-hover">
@@ -353,6 +384,7 @@
             document.getElementById(section + 'Link').classList.add('active');
             
             document.getElementById('naploSection').classList.add('hidden');
+            document.getElementById('galeriaSection').classList.add('hidden');
             document.getElementById('terkepSection').classList.add('hidden');
             document.getElementById('analizisSection').classList.add('hidden');
             
@@ -371,6 +403,11 @@
             
             if (section === 'analizis') {
                 loadAnalysis();
+            }
+            
+            if (section === 'galeria') {
+                loadGalleryHalfajok();
+                loadGallery();
             }
         }
         
@@ -658,6 +695,56 @@
             });
             
             fileInput.value = '';
+        }
+        
+        // Galéria halfajok betöltése
+        function loadGalleryHalfajok() {
+            fetch('/api/halfajok')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('galeriaHalfaj');
+                    select.innerHTML = '<option value="">Összes</option>';
+                    data.forEach(halfaj => {
+                        select.innerHTML += `<option value="${halfaj.id}">${halfaj.nev}</option>`;
+                    });
+                });
+        }
+        
+        // Galéria betöltése
+        function loadGallery() {
+            const halfajId = document.getElementById('galeriaHalfaj').value;
+            const helyszin = document.getElementById('galeriaHelyszin').value;
+            
+            let url = '/api/photos?';
+            if (halfajId) url += `halfaj_id=${halfajId}&`;
+            if (helyszin) url += `helyszin=${encodeURIComponent(helyszin)}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const grid = document.getElementById('galleryGrid');
+                    grid.innerHTML = '';
+                    
+                    if (data.length === 0) {
+                        grid.innerHTML = '<p class="col-span-full text-center text-gray-500 py-8">Nincsenek fotók a megadott szűrőkkel.</p>';
+                        return;
+                    }
+                    
+                    data.forEach(photo => {
+                        const card = document.createElement('div');
+                        card.className = 'glass-card rounded-xl shadow-card p-3 card-hover';
+                        card.innerHTML = `
+                            <img src="/static/${photo.fenym_kep_utvonala}" alt="${photo.halfaj_nev || 'Halfaj'}" class="w-full h-48 object-cover rounded-lg mb-3">
+                            <div class="text-sm">
+                                <div class="font-semibold text-gray-800">${photo.halfaj_nev || 'Ismeretlen'}</div>
+                                <div class="text-gray-600 text-xs">${photo.helyszin || '-'}</div>
+                                <div class="text-gray-500 text-xs">${photo.datum ? new Date(photo.datum).toLocaleDateString('hu-HU') : '-'}</div>
+                                ${photo.suly ? `<div class="text-blue-600 text-xs font-medium">${photo.suly} kg</div>` : ''}
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                });
         }
         
         // Inicializálás
