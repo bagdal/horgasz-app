@@ -425,6 +425,22 @@ def get_historical_weather(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Historical weather hiba: {str(e)}")
 
+@app.get("/api/geocode")
+def geocode_location(query: str):
+    """Helyszín → GPS koordináták konverzió"""
+    try:
+        location_data = location_service.geocode_address(query)
+        if location_data:
+            return {
+                "latitude": location_data["latitude"],
+                "longitude": location_data["longitude"],
+                "address": location_data["address"]
+            }
+        else:
+            return {"error": "Nem található a helyszín"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Geocode hiba: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -209,7 +209,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Helyszín</label>
-                            <input type="text" id="helyszin" class="input-field w-full px-4 py-2 rounded-lg" placeholder="Helyszín megadása">
+                            <input type="text" id="helyszin" class="input-field w-full px-4 py-2 rounded-lg" placeholder="Helyszín megadása" onchange="geocodeLocation()" onblur="geocodeLocation()">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Halfaj</label>
@@ -474,6 +474,24 @@
                 );
             } else {
                 alert('A böngésző nem támogatja a geolokációt.');
+            }
+        }
+        
+        // Auto-geokódovanie (helyszín → GPS koordináták)
+        function geocodeLocation() {
+            const helyszin = document.getElementById('helyszin').value;
+            if (helyszin && helyszin.length > 2) {
+                fetch(`/api/geocode?query=${encodeURIComponent(helyszin)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.latitude && data.longitude) {
+                            document.getElementById('latitude').value = data.latitude;
+                            document.getElementById('longitude').value = data.longitude;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Geocode hiba:', error);
+                    });
             }
         }
         
