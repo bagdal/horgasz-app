@@ -4,210 +4,152 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Horgász Alkalmazás</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e293b',
+                        secondary: '#3b82f6',
+                        accent: '#f43f5e',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Segoe UI', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+                        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                        'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                    },
+                }
+            }
+        }
+    </script>
     <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --accent-color: #e74c3c;
-            --success-color: #27ae60;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
             min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', sans-serif;
         }
         
-        .navbar {
-            background: rgba(44, 62, 80, 0.95) !important;
-            backdrop-filter: blur(10px);
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
         }
         
-        .navbar-brand {
-            font-weight: bold;
-            font-size: 1.5rem;
-        }
-        
-        .card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
+        .glass-card {
             background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
         }
         
-        .card-header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            border-radius: 15px 15px 0 0 !important;
-            font-weight: bold;
+        .gradient-text {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
-        .btn-primary {
-            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
-            border: none;
-            border-radius: 10px;
-            padding: 12px 30px;
-            font-weight: bold;
-            transition: all 0.3s;
+        .btn-gradient {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            transition: all 0.3s ease;
         }
         
-        .btn-primary:hover {
+        .btn-gradient:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
         }
         
-        .btn-success {
-            background: linear-gradient(135deg, var(--success-color), #2ecc71);
-            border: none;
-            border-radius: 10px;
+        .card-hover {
+            transition: all 0.3s ease;
         }
         
-        .form-control, .form-select {
-            border-radius: 10px;
-            border: 2px solid #e0e0e0;
-            padding: 12px;
-            transition: all 0.3s;
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
         
-        .form-control:focus, .form-select:focus {
-            border-color: var(--secondary-color);
-            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        .input-field {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
         }
         
-        .weather-card {
-            background: linear-gradient(135deg, #74b9ff, #0984e3);
-            color: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
+        .input-field:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
         }
         
-        .weather-icon {
-            font-size: 3rem;
-            margin-bottom: 10px;
+        .nav-link {
+            transition: all 0.3s ease;
         }
         
-        .stat-card {
-            background: linear-gradient(135deg, #a29bfe, #6c5ce7);
-            color: white;
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 15px;
+        .nav-link:hover {
+            color: #3b82f6;
         }
         
-        .stat-card i {
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-        
-        .stat-card h3 {
-            font-size: 2rem;
-            font-weight: bold;
-            margin: 0;
-        }
-        
-        .stat-card p {
-            margin: 0;
-            opacity: 0.9;
+        .nav-link.active {
+            color: #3b82f6;
+            border-bottom: 2px solid #3b82f6;
         }
         
         #map {
-            height: 400px;
-            border-radius: 15px;
-            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
         
-        .table {
-            border-radius: 10px;
+        .table-container {
+            border-radius: 12px;
             overflow: hidden;
         }
         
-        .table thead {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #1e293b, #334155);
             color: white;
         }
         
-        .table tbody tr:hover {
-            background-color: rgba(52, 152, 219, 0.1);
+        tr:hover td {
+            background: rgba(59, 130, 246, 0.05);
         }
         
-        .nav-tabs {
-            border: none;
-            margin-bottom: 20px;
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
         }
         
-        .nav-tabs .nav-link {
-            border: none;
-            border-radius: 10px;
-            margin-right: 5px;
-            color: var(--primary-color);
-            font-weight: bold;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
-        .nav-tabs .nav-link.active {
-            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
-            color: white;
-        }
-        
-        .recommendation-card {
-            background: linear-gradient(135deg, #fdcb6e, #f39c12);
-            color: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 15px;
-        }
-        
-        .recommendation-card i {
-            font-size: 1.5rem;
-            margin-right: 10px;
-        }
-        
-        .moon-phase {
-            text-align: center;
-            padding: 20px;
-            background: linear-gradient(135deg, #dfe6e9, #b2bec3);
-            border-radius: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .moon-icon {
-            font-size: 4rem;
-            margin-bottom: 10px;
-        }
-        
-        .upload-area {
-            border: 3px dashed var(--secondary-color);
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .upload-area:hover {
-            background-color: rgba(52, 152, 219, 0.1);
-        }
-        
-        .upload-area i {
-            font-size: 3rem;
-            color: var(--secondary-color);
-            margin-bottom: 10px;
-        }
-        
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .loading i {
-            font-size: 3rem;
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 20px;
+            height: 20px;
             animation: spin 1s linear infinite;
         }
         
@@ -215,723 +157,424 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
-        .alert {
-            border-radius: 10px;
-            border: none;
-        }
-        
-        .badge {
-            padding: 8px 12px;
-            border-radius: 10px;
-            font-weight: bold;
-        }
     </style>
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-fish me-2"></i>Horgász Alkalmazás
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#naplo" onclick="showSection('naplo')">
-                            <i class="fas fa-book me-1"></i>Napló
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#analizis" onclick="showSection('analizis')">
-                            <i class="fas fa-chart-line me-1"></i>Elemzés
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#javaslatok" onclick="showSection('javaslatok')">
-                            <i class="fas fa-lightbulb me-1"></i>Javaslatok
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#terkep" onclick="showSection('terkep')">
-                            <i class="fas fa-map me-1"></i>Térkép
-                        </a>
-                    </li>
-                </ul>
+<body class="text-gray-100">
+    <nav class="glass sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-fish text-2xl mr-3 text-blue-400"></i>
+                    <span class="text-xl font-bold gradient-text">Horgász Alkalmazás</span>
+                </div>
+                <div class="flex space-x-4">
+                    <button onclick="showSection('naplo')" class="nav-link px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 active" id="naploLink">
+                        <i class="fas fa-book mr-2"></i>Napló
+                    </button>
+                    <button onclick="showSection('terkep')" class="nav-link px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10" id="terkepLink">
+                        <i class="fas fa-map-marker-alt mr-2"></i>Térkép
+                    </button>
+                    <button onclick="showSection('analizis')" class="nav-link px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10" id="analizisLink">
+                        <i class="fas fa-chart-line mr-2"></i>Analízis
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
-
-    <div class="container py-4">
-        <div class="row">
-            <div class="col-12 mb-4">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <h1 class="display-4 fw-bold mb-3">
-                            <i class="fas fa-fish text-primary"></i> Horgász Alkalmazás
-                        </h1>
-                        <p class="lead">Modern horgászati naplóvezető időjárással, térképpel és elemzéssel</p>
-                    </div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Napló szekció -->
+        <div id="naploSection" class="fade-in">
+            <div class="glass-card rounded-2xl shadow-card p-6 mb-6 card-hover">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">
+                        <i class="fas fa-book mr-3 text-blue-500"></i>Horgászati Napló
+                    </h2>
+                    <button class="btn-gradient text-white px-6 py-2 rounded-lg font-medium" onclick="document.getElementById('importFile').click()">
+                        <i class="fas fa-file-import mr-2"></i>Importálás
+                    </button>
+                    <input type="file" id="importFile" accept=".csv,.xlsx,.xls" style="display: none" onchange="importCatches()">
+                    <span id="importStatus" class="ml-3 text-sm"></span>
                 </div>
-            </div>
-        </div>
-
-        <!-- Időjárás és Hold Fázis -->
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="weather-card" id="weatherCard">
-                    <div class="text-center">
-                        <i class="fas fa-cloud-sun weather-icon"></i>
-                        <h4 id="weatherTemp">--°C</h4>
-                        <p id="weatherDesc">Betöltés...</p>
-                        <div class="row mt-3">
-                            <div class="col-4">
-                                <i class="fas fa-wind"></i>
-                                <p id="windSpeed">-- km/h</p>
-                            </div>
-                            <div class="col-4">
-                                <i class="fas fa-tint"></i>
-                                <p id="humidity">--%</p>
-                            </div>
-                            <div class="col-4">
-                                <i class="fas fa-compress-arrows-alt"></i>
-                                <p id="pressure">-- hPa</p>
-                            </div>
+                
+                <form id="naploForm" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Dátum</label>
+                            <input type="date" id="datum" class="input-field w-full px-4 py-2 rounded-lg" required>
                         </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="moon-phase">
-                    <i class="fas fa-moon moon-icon"></i>
-                    <h4 id="moonPhase">Betöltés...</h4>
-                    <p id="moonIllumination">--% megvilágítás</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Szakaszok -->
-        <div class="card mb-4" id="naploSection">
-            <div class="card-header">
-                <i class="fas fa-book me-2"></i>Horgászati Napló
-            </div>
-            <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-md-12">
-                        <button class="btn btn-success" onclick="document.getElementById('importFile').click()">
-                            <i class="fas fa-file-import me-2"></i>Importálás (CSV/Excel)
-                        </button>
-                        <input type="file" id="importFile" accept=".csv,.xlsx,.xls" style="display: none" onchange="importCatches()">
-                        <span id="importStatus" class="ms-3"></span>
-                    </div>
-                </div>
-                <form id="naploForm">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Dátum</label>
-                            <input type="date" class="form-control" id="datum" required>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Helyszín</label>
+                            <input type="text" id="helyszin" class="input-field w-full px-4 py-2 rounded-lg" placeholder="Helyszín megadása">
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Helyszín</label>
-                            <input type="text" class="form-control" id="helyszin" required placeholder="Pl. Balaton, Siófok">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Halfaj</label>
-                            <select class="form-select" id="halfaj" required>
-                                <option value="">Válassz halfajt...</option>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Halfaj</label>
+                            <select id="halfaj" class="input-field w-full px-4 py-2 rounded-lg">
+                                <option value="">Válasszon halfajt...</option>
                             </select>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Súly (kg)</label>
-                            <input type="number" step="0.01" class="form-control" id="suly" placeholder="0.00">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Súly (kg)</label>
+                            <input type="number" id="suly" step="0.01" class="input-field w-full px-4 py-2 rounded-lg" placeholder="0.00">
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Hossz (cm)</label>
-                            <input type="number" step="0.1" class="form-control" id="hossz" placeholder="0.0">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Hossz (cm)</label>
+                            <input type="number" id="hossz" step="0.1" class="input-field w-full px-4 py-2 rounded-lg" placeholder="0.0">
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Csali</label>
-                            <input type="text" class="form-control" id="csali" placeholder="Pl. kukorica, giliszta">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Csali</label>
+                            <input type="text" id="csali" class="input-field w-full px-4 py-2 rounded-lg" placeholder="Csali megadása">
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Etetőanyag</label>
-                            <input type="text" class="form-control" id="etetoanyag" placeholder="Pl. bojlis, method mix">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Etetőanyag</label>
+                            <input type="text" id="etetoanyag" class="input-field w-full px-4 py-2 rounded-lg" placeholder="Etetőanyag megadása">
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Szélesség</label>
-                            <input type="number" step="0.01" class="form-control" id="latitude" placeholder="47.1234">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">PVA tartalom</label>
+                            <input type="text" id="pva_tartalom" class="input-field w-full px-4 py-2 rounded-lg" placeholder="Mi volt a PVA-ban">
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Hosszúság</label>
-                            <input type="number" step="0.01" class="form-control" id="longitude" placeholder="19.5678">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">PVA használata</label>
-                            <div class="form-check mt-2">
-                                <input class="form-check-input" type="checkbox" id="pva_hasznalata" onchange="togglePvaField()">
-                                <label class="form-check-label" for="pva_hasznalata">Igen</label>
-                            </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="pva_hasznalata" class="w-5 h-5 text-blue-500 rounded">
+                            <label for="pva_hasznalata" class="ml-2 text-sm font-medium text-gray-700">PVA használata</label>
                         </div>
                     </div>
-                    <div class="row" id="pva_tartalom_row" style="display: none;">
-                        <div class="col-md-12 mb-3">
-                            <label class="form-label">PVA tartalma</label>
-                            <input type="text" class="form-control" id="pva_tartalom" placeholder="Mi volt a PVA-ban? (pl. kukorica, bojli)">
-                        </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Megjegyzés</label>
+                        <textarea id="megjegyzes" rows="3" class="input-field w-full px-4 py-2 rounded-lg" placeholder="Megjegyzés megadása"></textarea>
                     </div>
+                    <div class="flex space-x-4">
+                        <button type="submit" class="btn-gradient text-white px-8 py-3 rounded-lg font-medium">
+                            <i class="fas fa-save mr-2"></i>Mentés
+                        </button>
+                        <button type="button" onclick="getLocation()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-all">
+                            <i class="fas fa-location-arrow mr-2"></i>GPS Helymeghatározás
+                        </button>
                     </div>
-                    <div class="row">
-                        <div class="col-12 mb-3">
-                            <label class="form-label">Fénykép feltöltése</label>
-                            <div class="upload-area" onclick="document.getElementById('fenym_kep').click()">
-                                <i class="fas fa-camera"></i>
-                                <p>Kattints a képfeltöltéshez</p>
-                                <input type="file" id="fenym_kep" accept="image/*" style="display: none;">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-12 mb-3">
-                            <label class="form-label">Megjegyzés</label>
-                            <textarea class="form-control" id="megjegyzes" rows="3" placeholder="Egyéb megjegyzések..."></textarea>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-2"></i>Mentés
-                    </button>
-                    <button type="button" class="btn btn-success ms-2" onclick="getLocation()">
-                        <i class="fas fa-location-arrow me-2"></i>Helymeghatározás
-                    </button>
                 </form>
             </div>
-        </div>
-
-        <!-- Elemzés Szakasz -->
-        <div class="card mb-4" id="analizisSection" style="display: none;">
-            <div class="card-header">
-                <i class="fas fa-chart-line me-2"></i>Elemzés
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <div class="stat-card">
-                            <i class="fas fa-fish"></i>
-                            <h3 id="totalCatches">0</h3>
-                            <p>Összes fogás</p>
+            
+            <!-- Időjárás kártya -->
+            <div id="weatherCard" class="glass-card rounded-2xl shadow-card p-6 mb-6 card-hover hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Időjárás</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div><i class="fas fa-wind mr-2 text-blue-500"></i><span id="szelsebesseg">-</span> km/h</div>
+                            <div><i class="fas fa-compass mr-2 text-blue-500"></i><span id="selirany">-</span></div>
+                            <div><i class="fas fa-thermometer-half mr-2 text-red-500"></i><span id="homerseklet">-</span>°C</div>
+                            <div><i class="fas fa-tint mr-2 text-blue-500"></i><span id="paratartalom">-</span>%</div>
                         </div>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="stat-card">
-                            <i class="fas fa-weight"></i>
-                            <h3 id="avgWeight">0 kg</h3>
-                            <p>Átlagos súly</p>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="stat-card">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <h3 id="totalLocations">0</h3>
-                            <p>Helyszín</p>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="stat-card">
-                            <i class="fas fa-paw"></i>
-                            <h3 id="totalSpecies">0</h3>
-                            <p>Halfaj</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <h5>Havi statisztikák</h5>
-                        <canvas id="monthlyChart"></canvas>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <h5>Halfaj statisztika</h5>
-                        <canvas id="fishSpeciesChart"></canvas>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <h5>Helyszín statisztika</h5>
-                        <canvas id="locationChart"></canvas>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <h5>Hold fázis statisztika</h5>
-                        <canvas id="moonPhaseChart"></canvas>
+                    <div class="text-right">
+                        <div class="text-4xl mb-2" id="weatherIcon">🌤️</div>
+                        <div class="text-sm text-gray-600" id="holdFazis">-</div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Javaslatok Szakasz -->
-        <div class="card mb-4" id="javaslatokSection" style="display: none;">
-            <div class="card-header">
-                <i class="fas fa-lightbulb me-2"></i>Javaslatok
-            </div>
-            <div class="card-body">
-                <button class="btn btn-primary mb-3" onclick="getRecommendations()">
-                    <i class="fas fa-magic me-2"></i>Javaslatok lekérése
-                </button>
-                <div id="recommendations"></div>
-            </div>
-        </div>
-
-        <!-- Térkép Szakasz -->
-        <div class="card mb-4" id="terkepSection" style="display: none;">
-            <div class="card-header">
-                <i class="fas fa-map me-2"></i>Térkép
-            </div>
-            <div class="card-body">
-                <div id="map"></div>
-            </div>
-        </div>
-
-        <!-- Naplók Táblázat -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <i class="fas fa-list me-2"></i>Horgászati Naplók
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover" id="naplokTable">
+            
+            <!-- Napló táblázat -->
+            <div class="glass-card rounded-2xl shadow-card p-6 card-hover">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-list mr-3 text-blue-500"></i>Fogások listája
+                </h3>
+                <div class="table-container overflow-x-auto">
+                    <table class="w-full">
                         <thead>
                             <tr>
-                                <th>Dátum</th>
-                                <th>Helyszín</th>
-                                <th>Halfaj</th>
-                                <th>Súly</th>
-                                <th>Csali</th>
-                                <th>Hold fázis</th>
-                                <th>Műveletek</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dátum</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Helyszín</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Halfaj</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Súly</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hossz</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Csali</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Műveletek</th>
                             </tr>
                         </thead>
-                        <tbody id="naplokBody">
+                        <tbody id="naploTableBody" class="bg-white divide-y divide-gray-200">
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
+        
+        <!-- Térkép szekció -->
+        <div id="terkepSection" class="fade-in hidden">
+            <div class="glass-card rounded-2xl shadow-card p-6 card-hover">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-map-marker-alt mr-3 text-blue-500"></i>Fogások térképen
+                </h2>
+                <div id="map" class="w-full h-96 rounded-lg"></div>
+            </div>
+        </div>
+        
+        <!-- Analízis szekció -->
+        <div id="analizisSection" class="fade-in hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="glass-card rounded-2xl shadow-card p-6 card-hover">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-chart-line mr-3 text-blue-500"></i>Havi statisztikák
+                    </h3>
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+                <div class="glass-card rounded-2xl shadow-card p-6 card-hover">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-fish mr-3 text-blue-500"></i>Halfaj statisztika
+                    </h3>
+                    <canvas id="fishChart"></canvas>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass-card rounded-2xl shadow-card p-6 card-hover">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-map-marker-alt mr-3 text-blue-500"></i>Helyszín statisztika
+                    </h3>
+                    <canvas id="locationChart"></canvas>
+                </div>
+                <div class="glass-card rounded-2xl shadow-card p-6 card-hover">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-moon mr-3 text-blue-500"></i>Holdfázis statisztika
+                    </h3>
+                    <canvas id="moonChart"></canvas>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         let map;
         let markers = [];
-        let currentLat = 47.4979;
-        let currentLon = 19.0402;
-
-        // Oldal betöltésekor
-        document.addEventListener('DOMContentLoaded', function() {
-            initMap();
-            loadHalfajok();
-            loadNaplok();
-            loadMoonPhase();
-            
-            // Mai dátum beállítása
-            document.getElementById('datum').valueAsDate = new Date();
-            
-            // Automatikus GPS helymeghatározás és időjárás frissítése
-            getLocation();
-        });
-
-        // Térkép inicializálása
-        function initMap() {
-            map = L.map('map').setView([currentLat, currentLon], 10);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-        }
-
-        // Szakasz megjelenítése
+        let monthlyChart, fishChart, locationChart, moonChart;
+        
+        // Szekció megjelenítése
         function showSection(section) {
-            document.getElementById('naploSection').style.display = section === 'naplo' ? 'block' : 'none';
-            document.getElementById('analizisSection').style.display = section === 'analizis' ? 'block' : 'none';
-            document.getElementById('javaslatokSection').style.display = section === 'javaslatok' ? 'block' : 'none';
-            document.getElementById('terkepSection').style.display = section === 'terkep' ? 'block' : 'none';
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            document.getElementById(section + 'Link').classList.add('active');
+            
+            document.getElementById('naploSection').classList.add('hidden');
+            document.getElementById('terkepSection').classList.add('hidden');
+            document.getElementById('analizisSection').classList.add('hidden');
+            
+            document.getElementById(section + 'Section').classList.remove('hidden');
+            document.getElementById(section + 'Section').classList.add('fade-in');
             
             if (section === 'terkep') {
-                setTimeout(() => map.invalidateSize(), 100);
+                setTimeout(() => {
+                    if (!map) {
+                        initMap();
+                    } else {
+                        map.invalidateSize();
+                    }
+                }, 100);
             }
             
             if (section === 'analizis') {
                 loadAnalysis();
             }
         }
-
-        // Helymeghatározás
+        
+        // Térkép inicializálása
+        function initMap() {
+            map = L.map('map').setView([48.15, 17.5], 8);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            loadMapMarkers();
+        }
+        
+        // GPS helymeghatározás
         function getLocation() {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(async function(position) {
-                    currentLat = position.coords.latitude;
-                    currentLon = position.coords.longitude;
-                    document.getElementById('latitude').value = currentLat;
-                    document.getElementById('longitude').value = currentLon;
-                    
-                    // Reverse geocoding - helyszín lekérése
-                    try {
-                        const response = await fetch(`/api/reverse-geocode?latitude=${currentLat}&longitude=${currentLon}`);
-                        const locationData = await response.json();
-                        if (locationData && locationData.address) {
-                            document.getElementById('helyszin').value = locationData.address;
-                        }
-                    } catch (error) {
-                        console.error('Hiba a helyszín lekérésekor:', error);
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                document.getElementById('helyszin').value = data.display_name || 'Ismeretlen';
+                            });
+                    },
+                    (error) => {
+                        alert('Nem sikerült meghatározni a helyzetet.');
                     }
-                    
-                    // Térkép frissítése
-                    map.setView([currentLat, currentLon], 13);
-                    L.marker([currentLat, currentLon]).addTo(map)
-                        .bindPopup('Jelenlegi hely').openPopup();
-                    
-                    // Időjárás frissítése
-                    loadWeather();
-                });
+                );
             } else {
-                alert('A böngésző nem támogatja a helymeghatározást.');
+                alert('A böngésző nem támogatja a geolokációt.');
             }
         }
-
+        
         // Halfajok betöltése
-        async function loadHalfajok() {
-            try {
-                const response = await fetch('/api/halfajok');
-                const halfajok = await response.json();
-                const select = document.getElementById('halfaj');
-                halfajok.forEach(halfaj => {
-                    const option = document.createElement('option');
-                    option.value = halfaj.id;
-                    option.textContent = halfaj.nev;
-                    select.appendChild(option);
+        function loadHalfajok() {
+            fetch('/api/halfajok')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('halfaj');
+                    select.innerHTML = '<option value="">Válasszon halfajt...</option>';
+                    data.forEach(halfaj => {
+                        select.innerHTML += `<option value="${halfaj.id}">${halfaj.nev}</option>`;
+                    });
                 });
-            } catch (error) {
-                console.error('Hiba a halfajok betöltésekor:', error);
-            }
         }
-
-        // Naplók betöltése
-        async function loadNaplok() {
-            try {
-                const response = await fetch('/api/naplok');
-                const naplok = await response.json();
-                const tbody = document.getElementById('naplokBody');
-                tbody.innerHTML = '';
-                
-                naplok.forEach(naplo => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${new Date(naplo.datum).toLocaleDateString('hu-HU')}</td>
-                        <td>${naplo.helyszin}</td>
-                        <td>${naplo.halfaj ? naplo.halfaj.nev : '-'}</td>
-                        <td>${naplo.suly ? naplo.suly.toFixed(2) + ' kg' : '-'}</td>
-                        <td>${naplo.csali || '-'}</td>
-                        <td>${naplo.hold_fazis || '-'}</td>
-                        <td>
-                            <button class="btn btn-sm btn-primary" onclick="showNaploDetail(${naplo.id})">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
+        
+        // Napló betöltése
+        function loadNaplok() {
+            fetch('/api/naplok')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('naploTableBody');
+                    tbody.innerHTML = '';
+                    data.forEach(naplo => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">${new Date(naplo.datum).toLocaleDateString('hu-HU')}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">${naplo.helyszin || '-'}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">${naplo.halfaj_nev || '-'}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">${naplo.suly || '-'}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">${naplo.hossz || '-'}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">${naplo.csali || '-'}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                <button onclick="deleteNaplo(${naplo.id})" class="text-red-500 hover:text-red-700">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                });
+        }
+        
+        // Térkép marker betöltése
+        function loadMapMarkers() {
+            fetch('/api/naplok')
+                .then(response => response.json())
+                .then(data => {
+                    markers.forEach(marker => map.removeLayer(marker));
+                    markers = [];
                     
-                    // Marker hozzáadása a térképhez
-                    if (naplo.latitude && naplo.longitude) {
-                        const marker = L.marker([naplo.latitude, naplo.longitude]).addTo(map);
-                        marker.bindPopup(`
-                            <strong>${naplo.helyszin}</strong><br>
-                            ${naplo.halfaj ? naplo.halfaj.nev : '-'}<br>
-                            ${naplo.suly ? naplo.suly.toFixed(2) + ' kg' : '-'}
-                        `);
-                        markers.push(marker);
-                    }
+                    data.forEach(naplo => {
+                        if (naplo.latitude && naplo.longitude) {
+                            const marker = L.marker([naplo.latitude, naplo.longitude])
+                                .bindPopup(`<b>${naplo.helyszin}</b><br>${new Date(naplo.datum).toLocaleDateString('hu-HU')}`)
+                                .addTo(map);
+                            markers.push(marker);
+                        }
+                    });
                 });
-            } catch (error) {
-                console.error('Hiba a naplók betöltésekor:', error);
-            }
         }
-
-        // Időjárás betöltése
-        async function loadWeather() {
-            try {
-                const response = await fetch(`/api/weather?latitude=${currentLat}&longitude=${currentLon}`);
-                const weather = await response.json();
-                
-                document.getElementById('weatherTemp').textContent = weather.temperature.toFixed(1) + '°C';
-                document.getElementById('weatherDesc').textContent = weather.description;
-                document.getElementById('windSpeed').textContent = weather.wind_speed.toFixed(1) + ' km/h';
-                document.getElementById('humidity').textContent = weather.humidity + '%';
-                document.getElementById('pressure').textContent = weather.pressure + ' hPa';
-            } catch (error) {
-                console.error('Hiba az időjárás betöltésekor:', error);
-                document.getElementById('weatherDesc').textContent = 'Nem elérhető';
-            }
-        }
-
-        // Hold fázis betöltése
-        async function loadMoonPhase() {
-            try {
-                const response = await fetch('/api/moon');
-                const moon = await response.json();
-                
-                document.getElementById('moonPhase').textContent = moon.moon_phase;
-            } catch (error) {
-                console.error('Hiba a hold fázis betöltésekor:', error);
-                document.getElementById('moonPhase').textContent = 'Ismeretlen';
-            }
-        }
-
-        // Elemzés betöltése
-        async function loadAnalysis() {
-            try {
-                const response = await fetch('/api/analizis');
-                const analysis = await response.json();
-                
-                document.getElementById('totalCatches').textContent = analysis.osszes_fogas || 0;
-                document.getElementById('avgWeight').textContent = (analysis.atlagos_suly || 0).toFixed(2) + ' kg';
-                document.getElementById('totalLocations').textContent = Object.keys(analysis.helyszin_statisztika || {}).length;
-                document.getElementById('totalSpecies').textContent = (analysis.halfaj_statisztika || []).length;
-                
-                // Grafikonok betöltése
-                await loadCharts();
-            } catch (error) {
-                console.error('Hiba az elemzés betöltésekor:', error);
-            }
-        }
-
-        // Grafikonok betöltése
-        async function loadCharts() {
-            try {
-                // Havi statisztikák
-                const monthlyResponse = await fetch('/api/statistics/monthly');
-                const monthlyData = await monthlyResponse.json();
-                createMonthlyChart(monthlyData);
-                
-                // Halfaj statisztika
-                const fishResponse = await fetch('/api/statistics/fish-species');
-                const fishData = await fishResponse.json();
-                createFishSpeciesChart(fishData);
-                
-                // Helyszín statisztika
-                const locationResponse = await fetch('/api/statistics/locations');
-                const locationData = await locationResponse.json();
-                createLocationChart(locationData);
-                
-                // Hold fázis statisztika
-                const moonResponse = await fetch('/api/statistics/moon-phase');
-                const moonData = await moonResponse.json();
-                createMoonPhaseChart(moonData);
-            } catch (error) {
-                console.error('Hiba a grafikonok betöltésekor:', error);
-            }
-        }
-
-        // Havi statisztikák grafikon
-        function createMonthlyChart(data) {
-            const ctx = document.getElementById('monthlyChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map(d => d.honap),
-                    datasets: [{
-                        label: 'Fogások száma',
-                        data: data.map(d => d.darab),
-                        borderColor: '#3498db',
-                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }, {
-                        label: 'Összsúly (kg)',
-                        data: data.map(d => d.ossz_suly),
-                        borderColor: '#e74c3c',
-                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
+        
+        // Analízis betöltése
+        function loadAnalysis() {
+            fetch('/api/statistics/monthly')
+                .then(response => response.json())
+                .then(data => {
+                    const ctx = document.getElementById('monthlyChart').getContext('2d');
+                    if (monthlyChart) monthlyChart.destroy();
+                    monthlyChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                label: 'Fogások száma',
+                                data: data.counts,
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }, {
+                                label: 'Összsúly (kg)',
+                                data: data.weights,
+                                borderColor: '#8b5cf6',
+                                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { position: 'bottom' }
+                            }
                         }
-                    }
-                }
-            });
-        }
-
-        // Halfaj statisztika grafikon
-        function createFishSpeciesChart(data) {
-            const ctx = document.getElementById('fishSpeciesChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.map(d => d.halfaj),
-                    datasets: [{
-                        label: 'Fogások száma',
-                        data: data.map(d => d.darab),
-                        backgroundColor: 'rgba(52, 152, 219, 0.7)',
-                        borderColor: '#3498db',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-        }
-
-        // Helyszín statisztika grafikon
-        function createLocationChart(data) {
-            const ctx = document.getElementById('locationChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: data.map(d => d.helyszin),
-                    datasets: [{
-                        data: data.map(d => d.darab),
-                        backgroundColor: [
-                            '#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6',
-                            '#1abc9c', '#34495e', '#e67e22', '#16a085', '#8e44ad'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'right'
-                        }
-                    }
-                }
-            });
-        }
-
-        // Hold fázis statisztika grafikon
-        function createMoonPhaseChart(data) {
-            const ctx = document.getElementById('moonPhaseChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.map(d => d.hold_fazis || 'Ismeretlen'),
-                    datasets: [{
-                        label: 'Átlagos súly (kg)',
-                        data: data.map(d => d.atlag_suly),
-                        backgroundColor: 'rgba(155, 89, 182, 0.7)',
-                        borderColor: '#9b59b6',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-        }
-
-        // PVA mező dinamikus megjelenítése
-        function togglePvaField() {
-            const pvaCheckbox = document.getElementById('pva_hasznalata');
-            const pvaRow = document.getElementById('pva_tartalom_row');
-            
-            if (pvaCheckbox.checked) {
-                pvaRow.style.display = 'block';
-            } else {
-                pvaRow.style.display = 'none';
-                document.getElementById('pva_tartalom').value = '';
-            }
-        }
-
-        // Importálás
-        async function importCatches() {
-            const fileInput = document.getElementById('importFile');
-            const statusSpan = document.getElementById('importStatus');
-            
-            if (fileInput.files.length === 0) {
-                return;
-            }
-            
-            const file = fileInput.files[0];
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            statusSpan.textContent = 'Importálás folyamatban...';
-            statusSpan.className = 'ms-3 text-info';
-            
-            try {
-                const response = await fetch('/api/import', {
-                    method: 'POST',
-                    body: formData
+                    });
                 });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    statusSpan.textContent = `Sikeres import: ${result.imported} fogás`;
-                    statusSpan.className = 'ms-3 text-success';
-                    
-                    if (result.errors.length > 0) {
-                        statusSpan.textContent += ` (${result.errors.length} hiba)`;
-                    }
-                    
-                    // Naplók újratöltése
-                    loadNaplok();
-                    loadAnalysis();
-                } else {
-                    statusSpan.textContent = 'Import hiba: ' + result.detail;
-                    statusSpan.className = 'ms-3 text-danger';
-                }
-            } catch (error) {
-                statusSpan.textContent = 'Import hiba: ' + error.message;
-                statusSpan.className = 'ms-3 text-danger';
-            }
             
-            // Fájl input törlése
-            fileInput.value = '';
-        }
-
-        // Javaslatok lekérése
-        async function getRecommendations() {
-            try {
-                const response = await fetch(`/api/javaslatok?latitude=${currentLat}&longitude=${currentLon}`);
-                const data = await response.json();
-                
-                const recommendationsDiv = document.getElementById('recommendations');
-                recommendationsDiv.innerHTML = '';
-                
-                data.javaslatok.forEach(javaslat => {
-                    recommendationsDiv.innerHTML += `
-                        <div class="recommendation-card">
-                            <i class="fas fa-lightbulb"></i>
-                            ${javaslat}
-                        </div>
-                    `;
+            fetch('/api/statistics/fish')
+                .then(response => response.json())
+                .then(data => {
+                    const ctx = document.getElementById('fishChart').getContext('2d');
+                    if (fishChart) fishChart.destroy();
+                    fishChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                label: 'Fogások száma',
+                                data: data.counts,
+                                backgroundColor: ['#3b82f6', '#8b5cf6', '#f43f5e', '#10b981', '#f59e0b']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { display: false }
+                            }
+                        }
+                    });
                 });
-            } catch (error) {
-                console.error('Hiba a javaslatok lekérésekor:', error);
-            }
+            
+            fetch('/api/statistics/location')
+                .then(response => response.json())
+                .then(data => {
+                    const ctx = document.getElementById('locationChart').getContext('2d');
+                    if (locationChart) locationChart.destroy();
+                    locationChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                data: data.counts,
+                                backgroundColor: ['#3b82f6', '#8b5cf6', '#f43f5e', '#10b981', '#f59e0b']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { position: 'bottom' }
+                            }
+                        }
+                    });
+                });
+            
+            fetch('/api/statistics/moon')
+                .then(response => response.json())
+                .then(data => {
+                    const ctx = document.getElementById('moonChart').getContext('2d');
+                    if (moonChart) moonChart.destroy();
+                    moonChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                label: 'Átlagos súly (kg)',
+                                data: data.weights,
+                                backgroundColor: ['#3b82f6', '#8b5cf6', '#f43f5e', '#10b981']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { display: false }
+                            }
+                        }
+                    });
+                });
         }
-
-        // Napló űrlap küldése
-        document.getElementById('naploForm').addEventListener('submit', async function(e) {
+        
+        // Napló mentése
+        document.getElementById('naploForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const formData = new FormData();
@@ -944,39 +587,85 @@
             formData.append('etetoanyag', document.getElementById('etetoanyag').value);
             formData.append('pva_hasznalata', document.getElementById('pva_hasznalata').checked);
             formData.append('pva_tartalom', document.getElementById('pva_tartalom').value);
-            formData.append('latitude', document.getElementById('latitude').value);
-            formData.append('longitude', document.getElementById('longitude').value);
             formData.append('megjegyzes', document.getElementById('megjegyzes').value);
             
-            const fenym_kep = document.getElementById('fenym_kep').files[0];
-            if (fenym_kep) {
-                formData.append('fenym_kep', fenym_kep);
+            fetch('/api/naplok', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadNaplok();
+                loadMapMarkers();
+                loadAnalysis();
+                document.getElementById('naploForm').reset();
+                document.getElementById('datum').valueAsDate = new Date();
+            });
+        });
+        
+        // Napló törlése
+        function deleteNaplo(id) {
+            if (confirm('Biztosan törli ezt a fogást?')) {
+                fetch(`/api/naplok/${id}`, { method: 'DELETE' })
+                    .then(() => {
+                        loadNaplok();
+                        loadMapMarkers();
+                        loadAnalysis();
+                    });
+            }
+        }
+        
+        // Importálás
+        function importCatches() {
+            const fileInput = document.getElementById('importFile');
+            const statusSpan = document.getElementById('importStatus');
+            
+            if (fileInput.files.length === 0) {
+                return;
             }
             
-            try {
-                const response = await fetch('/api/naplo', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                if (response.ok) {
-                    alert('Napló sikeresen mentve!');
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            statusSpan.textContent = 'Importálás folyamatban...';
+            statusSpan.className = 'ml-3 text-sm text-blue-500';
+            
+            fetch('/api/import', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    statusSpan.textContent = `Sikeres import: ${result.imported} fogás`;
+                    statusSpan.className = 'ml-3 text-sm text-green-500';
+                    
+                    if (result.errors.length > 0) {
+                        statusSpan.textContent += ` (${result.errors.length} hiba)`;
+                    }
+                    
                     loadNaplok();
-                    this.reset();
-                    document.getElementById('datum').valueAsDate = new Date();
+                    loadAnalysis();
                 } else {
-                    alert('Hiba a mentés során!');
+                    statusSpan.textContent = 'Import hiba: ' + result.detail;
+                    statusSpan.className = 'ml-3 text-sm text-red-500';
                 }
-            } catch (error) {
-                console.error('Hiba:', error);
-                alert('Hiba a mentés során!');
-            }
-        });
-
-        // Napló részletek megjelenítése
-        function showNaploDetail(id) {
-            alert('Részletek megjelenítése: ID ' + id);
+            })
+            .catch(error => {
+                statusSpan.textContent = 'Import hiba: ' + error.message;
+                statusSpan.className = 'ml-3 text-sm text-red-500';
+            });
+            
+            fileInput.value = '';
         }
+        
+        // Inicializálás
+        document.addEventListener('DOMContentLoaded', function() {
+            loadHalfajok();
+            loadNaplok();
+            document.getElementById('datum').valueAsDate = new Date();
+        });
     </script>
 </body>
 </html>
