@@ -16,6 +16,7 @@ from app.services.location import LocationService
 from app.services.analysis import AnalysisService
 from app.services.solunar import SolunarService
 from app.services.historical_weather import HistoricalWeatherService
+from app.services.exif import ExifService
 
 app = FastAPI(title="Horgász Alkalmazás")
 
@@ -30,6 +31,7 @@ location_service = LocationService()
 analysis_service = AnalysisService()
 solunar_service = SolunarService()
 historical_weather_service = HistoricalWeatherService()
+exif_service = ExifService()
 
 @app.on_event("startup")
 def startup_event():
@@ -73,15 +75,30 @@ async def create_naplo(
         # Hold fázis számítása
         moon_phase = moon_service.get_moon_phase(datetime.utcnow())
         
-        # Fénykép mentése
+        # Fénykép mentése és EXIF adatok kinyerése
         kep_utvonala = None
+        exif_data = None
         if fenym_kep:
+            file_content = await fenym_kep.read()
             file_extension = fenym_kep.filename.split(".")[-1]
             unique_filename = f"{uuid.uuid4()}.{file_extension}"
             file_path = f"static/uploads/{unique_filename}"
+            
             with open(file_path, "wb") as buffer:
-                buffer.write(await fenym_kep.read())
+                buffer.write(file_content)
             kep_utvonala = file_path
+            
+            # EXIF adatok kinyerése
+            exif_data = exif_service.extract_exif_from_file(file_content)
+            
+            # EXIF adatok használata, ha nincsenek megadva
+            if exif_data:
+                if exif_data.get('gps') and not (latitude and longitude):
+                    latitude = exif_data['gps'].get('latitude')
+                    longitude = exif_data['gps'].get('longitude')
+                
+                if exif_data.get('datetime') and not datum:
+                    datum = exif_data['datetime'].strftime('%Y-%m-%d')
         
         # Napló létrehozása
         naplo = HorgaszatiNaplo(
