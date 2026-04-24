@@ -6,7 +6,7 @@ from datetime import datetime
 import os
 import uuid
 import pandas as pd
-from typing import Optional
+from typing import Optional, Dict
 
 from app.database import get_db, init_db
 from app.models import HorgaszatiNaplo, Halfaj
