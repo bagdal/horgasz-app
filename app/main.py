@@ -14,6 +14,7 @@ from app.services.weather import WeatherService
 from app.services.moon import MoonPhaseService
 from app.services.location import LocationService
 from app.services.analysis import AnalysisService
+from app.services.solunar import SolunarService
 
 app = FastAPI(title="Horgász Alkalmazás")
 
@@ -26,6 +27,7 @@ weather_service = WeatherService()
 moon_service = MoonPhaseService()
 location_service = LocationService()
 analysis_service = AnalysisService()
+solunar_service = SolunarService()
 
 @app.on_event("startup")
 def startup_event():
@@ -374,6 +376,19 @@ def get_photos(
         })
     
     return result
+
+@app.get("/api/solunar")
+def get_solunar(
+    date: str,
+    latitude: float,
+    longitude: float
+):
+    try:
+        date_obj = datetime.strptime(date, '%Y-%m-%d')
+        solunar_data = solunar_service.calculate_solunar(date_obj, latitude, longitude)
+        return solunar_data
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Solunar hiba: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

@@ -276,6 +276,37 @@
                 </div>
             </div>
             
+            <!-- Solunar táblázat -->
+            <div id="solunarCard" class="glass-card rounded-2xl shadow-card p-6 mb-6 card-hover hidden">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-moon mr-3 text-blue-500"></i>Solunar - Optimális horgászati idő
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-white/50 rounded-lg p-4">
+                        <div class="text-sm text-gray-600">Hold kelte/nyugdása</div>
+                        <div class="text-lg font-semibold">
+                            <i class="fas fa-arrow-up text-yellow-500"></i> <span id="moonrise">-</span> | 
+                            <i class="fas fa-arrow-down text-blue-500"></i> <span id="moonset">-</span>
+                        </div>
+                    </div>
+                    <div class="bg-white/50 rounded-lg p-4">
+                        <div class="text-sm text-gray-600">Hold fázis</div>
+                        <div class="text-lg font-semibold" id="moonPhase">-</div>
+                        <div class="text-sm text-gray-500" id="moonIllumination">-</div>
+                    </div>
+                </div>
+                <div class="mt-4 bg-white/50 rounded-lg p-4">
+                    <div class="text-sm text-gray-600 mb-2">Etetési időablakok</div>
+                    <div id="solunarPeriods" class="space-y-2">
+                    </div>
+                </div>
+                <div class="mt-4 text-center">
+                    <div class="text-sm text-gray-600">Intenzitás</div>
+                    <div class="text-2xl font-bold text-blue-600" id="solunarIntensity">-</div>
+                    <div class="text-sm" id="solunarRating">-</div>
+                </div>
+            </div>
+            
             <!-- Napló táblázat -->
             <div class="glass-card rounded-2xl shadow-card p-6 card-hover">
                 <h3 class="text-xl font-bold text-gray-800 mb-4">
@@ -433,6 +464,9 @@
                             .then(data => {
                                 document.getElementById('helyszin').value = data.display_name || 'Ismeretlen';
                             });
+                        
+                        // Solunar adatok betöltése
+                        loadSolunar(lat, lng);
                     },
                     (error) => {
                         alert('Nem sikerült meghatározni a helyzetet.');
@@ -441,6 +475,45 @@
             } else {
                 alert('A böngésző nem támogatja a geolokációt.');
             }
+        }
+        
+        // Solunar adatok betöltése
+        function loadSolunar(latitude, longitude) {
+            const date = new Date().toISOString().split('T')[0];
+            fetch(`/api/solunar?date=${date}&latitude=${latitude}&longitude=${longitude}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('solunarCard').classList.remove('hidden');
+                    document.getElementById('moonrise').textContent = data.moonrise || '-';
+                    document.getElementById('moonset').textContent = data.moonset || '-';
+                    document.getElementById('moonPhase').textContent = data.moon_phase || '-';
+                    document.getElementById('moonIllumination').textContent = data.moon_illumination ? `${data.moon_illumination}% megvilágítás` : '-';
+                    
+                    // Etetési időablakok
+                    const periodsDiv = document.getElementById('solunarPeriods');
+                    periodsDiv.innerHTML = '';
+                    
+                    const allPeriods = [...(data.major_periods || []), ...(data.minor_periods || [])];
+                    allPeriods.forEach(period => {
+                        const periodDiv = document.createElement('div');
+                        periodDiv.className = `flex items-center justify-between p-2 rounded ${period.type === 'major' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`;
+                        periodDiv.innerHTML = `
+                            <span class="font-medium">${period.type === 'major' ? 'Fő' : 'Mellék'} időszak</span>
+                            <span>${period.start} - ${period.end}</span>
+                        `;
+                        periodsDiv.appendChild(periodDiv);
+                    });
+                    
+                    if (allPeriods.length === 0) {
+                        periodsDiv.innerHTML = '<p class="text-gray-500">Nincsenek etetési időablakok ma.</p>';
+                    }
+                    
+                    document.getElementById('solunarIntensity').textContent = data.intensity ? `${data.intensity}%` : '-';
+                    document.getElementById('solunarRating').textContent = data.rating || '-';
+                })
+                .catch(error => {
+                    console.error('Solunar hiba:', error);
+                });
         }
         
         // Halfajok betöltése
