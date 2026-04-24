@@ -15,6 +15,7 @@ from app.services.moon import MoonPhaseService
 from app.services.location import LocationService
 from app.services.analysis import AnalysisService
 from app.services.solunar import SolunarService
+from app.services.historical_weather import HistoricalWeatherService
 
 app = FastAPI(title="Horgász Alkalmazás")
 
@@ -28,6 +29,7 @@ moon_service = MoonPhaseService()
 location_service = LocationService()
 analysis_service = AnalysisService()
 solunar_service = SolunarService()
+historical_weather_service = HistoricalWeatherService()
 
 @app.on_event("startup")
 def startup_event():
@@ -389,6 +391,22 @@ def get_solunar(
         return solunar_data
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Solunar hiba: {str(e)}")
+
+@app.get("/api/historical-weather")
+def get_historical_weather(
+    date: str,
+    latitude: float,
+    longitude: float
+):
+    try:
+        date_obj = datetime.strptime(date, '%Y-%m-%d')
+        weather_data = historical_weather_service.get_historical_weather(latitude, longitude, date_obj)
+        if weather_data:
+            return weather_data
+        else:
+            return {"error": "Nem elérhető történelmi időjárás adat"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Historical weather hiba: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
