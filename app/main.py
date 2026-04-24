@@ -17,6 +17,7 @@ from app.services.analysis import AnalysisService
 from app.services.solunar import SolunarService
 from app.services.historical_weather import HistoricalWeatherService
 from app.services.exif import ExifService
+from app.services.ai_service import AIService
 
 app = FastAPI(title="Horgász Alkalmazás")
 
@@ -32,6 +33,7 @@ analysis_service = AnalysisService()
 solunar_service = SolunarService()
 historical_weather_service = HistoricalWeatherService()
 exif_service = ExifService()
+ai_service = AIService()
 
 @app.on_event("startup")
 def startup_event():
@@ -438,15 +440,54 @@ def geocode_location(query: str):
             }
         else:
             return {"error": "Nem található a helyszín"}
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Geocode hiba: {str(e)}")
+
+@app.post("/api/ai/identify-fish")
+async def identify_fish(file: UploadFile = File(...)):
+    """AI halfaj felismerés képből"""
+    try:
+        # Fájl mentése ideiglenesen
+        file_content = await file.read()
+        file_extension = file.filename.split(".")[-1]
+        temp_path = f"static/uploads/temp_{uuid.uuid4()}.{file_extension}"
+
+        with open(temp_path, "wb") as buffer:
+            buffer.write(file_content)
+
+        # AI felismerés
+        result = ai_service.identify_fish_from_image(temp_path)
+
+        # Ideiglenes fájl törlése
+        os.remove(temp_path)
+
+        if result:
+            return result
+        else:
+            return {"error": "Nem sikerült a halfaj felismerés - API kulcs szükséges"}
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"AI felismerési hiba: {str(e)}")
+
+@app.post("/api/ai/analyze")
+def analyze_data(data: Dict):
+    """AI horgászati adatok elemzése és tippek"""
+    try:
+        result = ai_service.analyze_fishing_data(data)
+        if result:
+            return result
+        else:
+            return {"error": "Nem sikerült az elemzés - API kulcs szükséges"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"AI elemzési hiba: {str(e)}")
 
 @app.get("/api/export/csv")
 def export_csv(db: Session = Depends(get_db)):
     """Naplók exportálása CSV formátumban"""
     try:
         naplok = db.query(HorgaszatiNaplo).order_by(HorgaszatiNaplo.datum.desc()).all()
-        
+
         # DataFrame készítése
         data = []
         for naplo in naplok:
