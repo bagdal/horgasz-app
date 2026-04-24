@@ -194,10 +194,15 @@
                     <h2 class="text-2xl font-bold text-gray-800">
                         <i class="fas fa-book mr-3 text-blue-500"></i>Horgászati Napló
                     </h2>
-                    <button class="btn-gradient text-white px-6 py-2 rounded-lg font-medium" onclick="document.getElementById('importFile').click()">
-                        <i class="fas fa-file-import mr-2"></i>Importálás
-                    </button>
-                    <input type="file" id="importFile" accept=".csv,.xlsx,.xls" style="display: none" onchange="importCatches()">
+                    <div class="flex space-x-2">
+                        <button class="btn-gradient text-white px-6 py-2 rounded-lg font-medium" onclick="document.getElementById('importFile').click()">
+                            <i class="fas fa-file-import mr-2"></i>Importálás
+                        </button>
+                        <input type="file" id="importFile" accept=".csv,.xlsx,.xls" style="display: none" onchange="importCatches()">
+                        <button class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-all" onclick="exportCSV()">
+                            <i class="fas fa-file-export mr-2"></i>CSV Export
+                        </button>
+                    </div>
                     <span id="importStatus" class="ml-3 text-sm"></span>
                 </div>
                 
@@ -744,7 +749,7 @@
         }
         
         // Importálás
-        function importCatches() {
+        async function importCatches() {
             const fileInput = document.getElementById('importFile');
             const statusSpan = document.getElementById('importStatus');
             
@@ -759,12 +764,14 @@
             statusSpan.textContent = 'Importálás folyamatban...';
             statusSpan.className = 'ml-3 text-sm text-blue-500';
             
-            fetch('/api/import', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(result => {
+            try {
+                const response = await fetch('/api/import', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
                 if (result.success) {
                     statusSpan.textContent = `Sikeres import: ${result.imported} fogás`;
                     statusSpan.className = 'ml-3 text-sm text-green-500';
@@ -773,19 +780,25 @@
                         statusSpan.textContent += ` (${result.errors.length} hiba)`;
                     }
                     
+                    // Naplók újratöltése
                     loadNaplok();
                     loadAnalysis();
                 } else {
                     statusSpan.textContent = 'Import hiba: ' + result.detail;
                     statusSpan.className = 'ml-3 text-sm text-red-500';
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 statusSpan.textContent = 'Import hiba: ' + error.message;
                 statusSpan.className = 'ml-3 text-sm text-red-500';
-            });
+            }
             
+            // Fájl input törlése
             fileInput.value = '';
+        }
+        
+        // CSV Export
+        function exportCSV() {
+            window.location.href = '/api/export/csv';
         }
         
         // Galéria halfajok betöltése

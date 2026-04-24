@@ -441,6 +441,48 @@ def geocode_location(query: str):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Geocode hiba: {str(e)}")
 
+@app.get("/api/export/csv")
+def export_csv(db: Session = Depends(get_db)):
+    """Naplók exportálása CSV formátumban"""
+    try:
+        naplok = db.query(HorgaszatiNaplo).order_by(HorgaszatiNaplo.datum.desc()).all()
+        
+        # DataFrame készítése
+        data = []
+        for naplo in naplok:
+            data.append({
+                'Dátum': naplo.datum.strftime('%Y-%m-%d') if naplo.datum else '',
+                'Helyszín': naplo.helyszin or '',
+                'Halfaj': naplo.halfaj.nev if naplo.halfaj else '',
+                'Súly (kg)': naplo.suly or '',
+                'Hossz (cm)': naplo.hossz or '',
+                'Csali': naplo.csali or '',
+                'Etetőanyag': naplo.etetoanyag or '',
+                'Szélsebesség (km/h)': naplo.szelsebesseg or '',
+                'Légnyomás (hPa)': naplo.legnyomas or '',
+                'Hőmérséklet (°C)': naplo.homerseklet or '',
+                'Páratartalom (%)': naplo.paratartalom or '',
+                'Hold fázis': naplo.hold_fazis or '',
+                'Szélesség': naplo.latitude or '',
+                'Hosszúság': naplo.longitude or '',
+                'Megjegyzés': naplo.megjegyzes or ''
+            })
+        
+        df = pd.DataFrame(data)
+        
+        # CSV készítése
+        from fastapi.responses import Response
+        csv_content = df.to_csv(index=False, encoding='utf-8-sig')
+        
+        return Response(
+            content=csv_content,
+            media_type='text/csv',
+            headers={'Content-Disposition': 'attachment; filename=horgaszati_naplok.csv'}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"CSV export hiba: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
